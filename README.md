@@ -1,7 +1,7 @@
 ## API settings
 
 + Web.Api/appsetings.json - configuration DB
-+ Web.Models/JWTconfig.cs - configuration JWT
++ Web.Models/config/JWTconfig.cs - configuration JWT
 
 ## How to run API
 ```
