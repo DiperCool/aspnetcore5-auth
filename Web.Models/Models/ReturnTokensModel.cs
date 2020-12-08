@@ -1,14 +1,14 @@
 namespace Web.Models.Models
 {
-    public class ReturnTokens
+    public class ReturnTokensModel
     {
-        public ReturnTokens(string _token, string _refreshtoken)
+        public ReturnTokensModel(string _token, string _refreshtoken)
         {
             Token=_token;
             RefreshToken=_refreshtoken;
         }
 
-        public ReturnTokens(){}
+        public ReturnTokensModel(){}
 
         public string Token{get;set;}
         public string RefreshToken{get;set;}

@@ -1,4 +1,12 @@
-$HEADER$namespace $NAMESPACE$
+using System.ComponentModel.DataAnnotations;
+
+namespace Web.Models.Models
 {
-  public class $CLASS$ {$END$}
+    public class LoginModel
+    {
+        [Required]
+        public string Login{get;set;}
+        [Required]
+        public string Password{get;set;}
+    }
 }

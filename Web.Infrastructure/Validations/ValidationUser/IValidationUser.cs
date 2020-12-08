@@ -1,4 +1,7 @@
-$HEADER$namespace $NAMESPACE$
+namespace Web.Infrastructure.Validations.ValidationUser
 {
-  public interface $INTERFACE$ {$END$}
+    public interface IValidationUser
+    {
+        bool userIsExist(string login);
+    }
 }
