@@ -10,9 +10,9 @@ namespace Web.Infrastructure.Validations.ValidationUser
         {
             _context = context;
         }
-        public bool userIsExist(string login)
+        public bool userIsExist(string email)
         {
-            return _context.Users.Any(x => x.Login == login);
+            return _context.Users.Any(x => x.Email == email);
         }
     }
 }

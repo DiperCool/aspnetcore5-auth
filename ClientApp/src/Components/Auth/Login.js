@@ -9,15 +9,17 @@ export const Login=()=>{
         isErrors:false,
         allErrors:[]
     });
-    let refLogin= useRef(null);
+    let refEmail= useRef(null);
     let refPassword=useRef(null);
 
     let {setGetLogin}= useContext(UserContext);
 
     const handler=async()=>{
-        let login= refLogin.current.value;
-        let password= refPassword.current.value;
-        let result=await Auth.login(login,password);
+        let obj= {
+            email: refEmail.current.value,
+            password: refPassword.current.value
+        }
+        let result=await Auth.login(obj);
         if(result.notSuccesed){
             setErrors({
                 isErrors:true,
@@ -37,15 +39,15 @@ export const Login=()=>{
         <div>
             <div>
                 <input 
-                    ref={refLogin}
-                    type="text" 
+                    ref={refEmail}
+                    type="email" 
                     id="standard-basic" 
-                        abel="Login" />
+                    placeholder="Email" />
                 <br></br>
                 <input 
                     ref={refPassword} 
                     id="standard-basic" 
-                    label="Password" 
+                    placeholder="Password" 
                     type="password"
                         />
                 <br></br>

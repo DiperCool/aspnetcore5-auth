@@ -2,9 +2,9 @@ import axios from "axios";
 import jwt from "./ControlJwt";
 import {config} from "../../config";
 class Auth{
-    async login(login,password){
+    async login(obj){
         try{
-            let result= await axios.post(config.url+"api/auth/login",{Login:login, Password: password});
+            let result= await axios.post(config.url+"api/auth/login",obj);
             jwt.setJwt(result.data.token)
             jwt.setRefreshToken(result.data.refreshToken);
             return {
@@ -20,9 +20,9 @@ class Auth{
     }
 
 
-    async register(login, password, rePassword){
+    async register(obj){
         try{
-            let result = await axios.post(config.url+"api/auth/register",{Login:login, Password:password, RePassword:rePassword});
+            let result = await axios.post(config.url+"api/auth/register",obj);
             jwt.setJwt(result.data.token)
             jwt.setRefreshToken(result.data.refreshToken);
             return {

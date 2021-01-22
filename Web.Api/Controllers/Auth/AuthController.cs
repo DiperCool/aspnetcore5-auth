@@ -1,14 +1,19 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Security.Claims;
+using System.Threading.Tasks;
+using Google.Apis.Auth;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using Web.Api.Filters;
 using Web.Infrastructure.Auth;
+using Web.Infrastructure.ExtensionMethods;
 using Web.Infrastructure.JWT;
 using Web.Infrastructure.Validations.ValidationUser;
 using Web.Models.Entity;
 using Web.Models.Models;
+using static Google.Apis.Auth.GoogleJsonWebSignature;
 
 namespace Web.Api.Auth.Controllers
 {
@@ -25,16 +30,15 @@ namespace Web.Api.Auth.Controllers
             _validation = validation;
             _auth = auth;
         }
-
+        [ModelValidation]
         [HttpPost]
         public IActionResult Register([FromBody] RegistarationModel model){
-            if(!ModelState.IsValid) return BadRequest(ModelState);
-            if(_validation.userIsExist(model.Login)){
-                ModelState.AddModelError("LoginException","Такой логин существует");
+            if(_validation.userIsExist(model.Email)){
+                ModelState.AddModelError("LoginException","This mail exist");
                 return BadRequest(ModelState);
             }
 
-            User user = new User() {Login = model.Login, Password = model.Password};
+            User user = new User() {Email = model.Email, Password = model.Password, FirstName=model.FirstName, LastName=model.LastName};
             _auth.CreateUser(user);
             return GenerateTokens(user);
         }
@@ -43,10 +47,10 @@ namespace Web.Api.Auth.Controllers
         [HttpPost]
         public IActionResult Login([FromBody] LoginModel model)
         {
-            User user = _auth.GetUser(model.Login, model.Password);
+            User user = _auth.GetUser(model.Email, model.Password);
             if (user==null)
             {
-                return BadRequest("Login or password is incorrect");
+                return BadRequest("Email or password is incorrect");
             }
             return GenerateTokens(user);
             
@@ -56,17 +60,32 @@ namespace Web.Api.Auth.Controllers
         public IActionResult Refresh([FromBody] ReturnTokensModel model)
         {
             var principal = _JWT.GetPrincipalFromExpiredToken(model.Token);
-            var username = principal.Identity.Name;
-            var user=_auth.GetUser(username);
+            var userId = principal.Claims.GetId();
+            var user=_auth.GetUser(userId);
             var savedRefreshToken = user.RefreshToken; //retrieve the refresh token from a data store
             if (savedRefreshToken != model.RefreshToken)
                 throw new SecurityTokenException("Invalid refresh token");
 
             var newRefreshToken = _JWT.GenerateRefreshToken();
-            _auth.SaveRefreshToken(username, newRefreshToken);
+            _auth.SaveRefreshToken(userId, newRefreshToken);
 
             return GenerateTokens(user);
         }
+
+        [HttpPost]
+        public async Task<IActionResult> signinGoogle([FromBody]UserView userView){
+
+            Payload payload = await GoogleJsonWebSignature.ValidateAsync(userView.tokenId, new GoogleJsonWebSignature.ValidationSettings());
+            User user = _auth.GetUser(payload.Email);
+            if(user==null)
+            {
+                User u= new User{Email=payload.Email, FirstName=payload.Name, LastName= payload.FamilyName, EmailIsVerified=true};
+                u=_auth.CreateUser(u);
+                return GenerateTokens(u);
+            }
+            return GenerateTokens(user);
+        }
+
         [Authorize]
         [HttpGet]
         public IActionResult getLogin(){
@@ -75,15 +94,15 @@ namespace Web.Api.Auth.Controllers
         private IActionResult GenerateTokens(User user)
         {
             var refreshToken = _JWT.GenerateRefreshToken();
-            _auth.SetRefreshToken(user.Login, refreshToken);
+            _auth.SetRefreshToken(user.Id, refreshToken);
             IEnumerable<Claim> claims = new List<Claim>()
             {
-                new Claim(ClaimsIdentity.DefaultNameClaimType, user.Login),
-                new Claim(ClaimsIdentity.DefaultRoleClaimType, "user")
+                new Claim(ClaimsIdentity.DefaultNameClaimType, user.Email),
+                new Claim("Id", user.Id.ToString()),
+                new Claim(ClaimsIdentity.DefaultRoleClaimType, "user"),
             };
             string token = _JWT.GenerateToken(claims);
             return Ok(new ReturnTokensModel(token, refreshToken));
         }
     }
-    
 }

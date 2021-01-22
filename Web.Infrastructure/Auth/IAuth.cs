@@ -4,12 +4,13 @@ namespace Web.Infrastructure.Auth
 {
     public interface IAuth
     {
-        User GetUser(string login,string password);
-        User GetUser(string login);
-        bool CheckUserHaveRefreshToken(string login, string refreshToken);
-        void SaveRefreshToken(string login,string token);
-        void CreateUser(User user); 
-        void SetRefreshToken(string login,string token);
-        string GetRefreshToken(string login);
+        User GetUser(string email, string password);
+        User GetUser(int id);
+        User GetUser(string email);
+        bool CheckUserHaveRefreshToken(int id, string refreshToken);
+        void SaveRefreshToken(int id,string token);
+        User CreateUser(User user); 
+        void SetRefreshToken(int id,string token);
+        string GetRefreshToken(int id);
     }
 }
