@@ -32,23 +32,23 @@ namespace Web.Api.Auth.Controllers
         }
         [ModelValidation]
         [HttpPost]
-        public IActionResult Register([FromBody] RegistarationModel model){
-            if(_validation.userIsExist(model.Email)){
+        public async Task<IActionResult> Register([FromBody] RegistarationModel model){
+            if(await _validation.userIsExist(model.Email)){
                 ModelState.AddModelError("LoginException","This mail exist");
                 return BadRequest(ModelState);
             }
 
-            User user = new User() {Email = model.Email, Password = model.Password, FirstName=model.FirstName, LastName=model.LastName};
-            _auth.CreateUser(user);
+            User user = new User() {Email = model.Email, Password = BCrypt.Net.BCrypt.HashPassword(model.Password), FirstName=model.FirstName, LastName=model.LastName};
+            await _auth.CreateUser(user);
             return GenerateTokens(user);
         }
 
         [ModelValidation]
         [HttpPost]
-        public IActionResult Login([FromBody] LoginModel model)
+        public async Task<IActionResult> Login([FromBody] LoginModel model)
         {
-            User user = _auth.GetUser(model.Email, model.Password);
-            if (user==null)
+            User user = await _auth.GetUser(model.Email);
+            if (user==null || (user.Password==null || !BCrypt.Net.BCrypt.Verify(model.Password, user.Password)))
             {
                 return BadRequest("Email or password is incorrect");
             }
@@ -57,17 +57,17 @@ namespace Web.Api.Auth.Controllers
         }
         [ModelValidation]
         [HttpPost]
-        public IActionResult Refresh([FromBody] ReturnTokensModel model)
+        public async Task<IActionResult>  Refresh([FromBody] ReturnTokensModel model)
         {
             var principal = _JWT.GetPrincipalFromExpiredToken(model.Token);
             var userId = principal.Claims.GetId();
-            var user=_auth.GetUser(userId);
+            var user= await _auth.GetUser(userId);
             var savedRefreshToken = user.RefreshToken; //retrieve the refresh token from a data store
             if (savedRefreshToken != model.RefreshToken)
                 throw new SecurityTokenException("Invalid refresh token");
 
             var newRefreshToken = _JWT.GenerateRefreshToken();
-            _auth.SaveRefreshToken(userId, newRefreshToken);
+            await _auth.SaveRefreshToken(userId, newRefreshToken);
 
             return GenerateTokens(user);
         }
@@ -76,11 +76,11 @@ namespace Web.Api.Auth.Controllers
         public async Task<IActionResult> signinGoogle([FromBody]UserView userView){
 
             Payload payload = await GoogleJsonWebSignature.ValidateAsync(userView.tokenId, new GoogleJsonWebSignature.ValidationSettings());
-            User user = _auth.GetUser(payload.Email);
+            User user = await _auth.GetUser(payload.Email);
             if(user==null)
             {
                 User u= new User{Email=payload.Email, FirstName=payload.GivenName, LastName= payload.FamilyName, EmailIsVerified=true};
-                u=_auth.CreateUser(u);
+                u= await _auth.CreateUser(u);
                 return GenerateTokens(u);
             }
             return GenerateTokens(user);

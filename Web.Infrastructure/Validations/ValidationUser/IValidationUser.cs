@@ -1,7 +1,9 @@
+using System.Threading.Tasks;
+
 namespace Web.Infrastructure.Validations.ValidationUser
 {
     public interface IValidationUser
     {
-        bool userIsExist(string email);
+        Task<bool> userIsExist(string email);
     }
 }

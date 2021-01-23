@@ -12,6 +12,9 @@ namespace Web.Models.Models
         [Required]
         public string LastName { get; set; }
         [Required]
+        [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[#$@!%&*?])[A-Za-z\d#$@!%&*?]{8,30}$", 
+                ErrorMessage="min 1 uppercase, min 1 lowercase, min 1 special character, min 1 number, min 8 characters, max 30 characters")]
+
         public string Password{get;set;}
         [Compare("Password")]
         public string RePassword{get;set;}

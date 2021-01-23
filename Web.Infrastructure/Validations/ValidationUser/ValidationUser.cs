@@ -1,4 +1,6 @@
 using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 using Web.Models.Db;
 
 namespace Web.Infrastructure.Validations.ValidationUser
@@ -10,9 +12,9 @@ namespace Web.Infrastructure.Validations.ValidationUser
         {
             _context = context;
         }
-        public bool userIsExist(string email)
+        public async Task<bool> userIsExist(string email)
         {
-            return _context.Users.Any(x => x.Email == email);
+            return await _context.Users.AnyAsync(x => x.Email == email);
         }
     }
 }

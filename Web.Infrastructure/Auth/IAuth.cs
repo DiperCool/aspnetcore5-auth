@@ -1,16 +1,17 @@
+using System.Threading.Tasks;
 using Web.Models.Entity;
 
 namespace Web.Infrastructure.Auth
 {
     public interface IAuth
     {
-        User GetUser(string email, string password);
-        User GetUser(int id);
-        User GetUser(string email);
-        bool CheckUserHaveRefreshToken(int id, string refreshToken);
-        void SaveRefreshToken(int id,string token);
-        User CreateUser(User user); 
-        void SetRefreshToken(int id,string token);
-        string GetRefreshToken(int id);
+        Task<User> GetUser(string email, string password);
+        Task<User> GetUser(int id);
+        Task<User> GetUser(string email);
+        Task<bool> CheckUserHaveRefreshToken(int id, string refreshToken);
+        Task SaveRefreshToken(int id,string token);
+        Task<User> CreateUser(User user); 
+        Task SetRefreshToken(int id,string token);
+        Task<string> GetRefreshToken(int id);
     }
 }
