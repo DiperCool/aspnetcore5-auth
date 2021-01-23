@@ -79,7 +79,7 @@ namespace Web.Api.Auth.Controllers
             User user = _auth.GetUser(payload.Email);
             if(user==null)
             {
-                User u= new User{Email=payload.Email, FirstName=payload.Name, LastName= payload.FamilyName, EmailIsVerified=true};
+                User u= new User{Email=payload.Email, FirstName=payload.GivenName, LastName= payload.FamilyName, EmailIsVerified=true};
                 u=_auth.CreateUser(u);
                 return GenerateTokens(u);
             }
