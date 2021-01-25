@@ -1,6 +1,6 @@
 ## API settings
 
-+ Web.Api/appsetings.json - configuration DB
++ Web.Api/appsetings.json - configuration DB and MailKit
 + Web.Models/config/JWTconfig.cs - configuration JWT
 
 ## How to run API
