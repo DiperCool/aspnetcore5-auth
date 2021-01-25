@@ -4,10 +4,12 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using Google.Apis.Auth;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using Web.Api.Filters;
 using Web.Infrastructure.Auth;
+using Web.Infrastructure.EmailSender;
 using Web.Infrastructure.ExtensionMethods;
 using Web.Infrastructure.JWT;
 using Web.Infrastructure.Validations.ValidationUser;
@@ -24,14 +26,20 @@ namespace Web.Api.Auth.Controllers
         IJWT _JWT; 
         IValidationUser _validation;
         IAuth _auth;
-        public AuthController(IJWT jwt, IValidationUser validation,IAuth auth)
+        IEmailSender _emailSender;
+        IWebHostEnvironment _appEnvironment;
+
+        public AuthController(IJWT jWT, IValidationUser validation, IAuth auth, IEmailSender emailSender, IWebHostEnvironment appEnvironment)
         {
-            _JWT = jwt;
+            _JWT = jWT;
             _validation = validation;
             _auth = auth;
+            _emailSender = emailSender;
+            _appEnvironment = appEnvironment;
         }
-        [ModelValidation]
+
         [HttpPost]
+        [ModelValidation]
         public async Task<IActionResult> Register([FromBody] RegistarationModel model){
             if(await _validation.userIsExist(model.Email)){
                 ModelState.AddModelError("LoginException","This mail exist");
@@ -40,6 +48,9 @@ namespace Web.Api.Auth.Controllers
 
             User user = new User() {Email = model.Email, Password = BCrypt.Net.BCrypt.HashPassword(model.Password), FirstName=model.FirstName, LastName=model.LastName};
             await _auth.CreateUser(user);
+            string guid= await _auth.CreateGuidForConfirmEmail(user.Id);
+            await _emailSender.SendConfirmEmail(model.Email,string.Format("{0}/api/auth/confirmEmail?guid={1}", 
+                                                            HttpContext.Request.GetFullUrl(),guid));
             return GenerateTokens(user);
         }
 
@@ -91,6 +102,15 @@ namespace Web.Api.Auth.Controllers
         public IActionResult getLogin(){
             return Ok(User.Identity.Name);
         }
+        [HttpGet]
+        public async Task<IActionResult> confirmEmail(string guid)
+        {
+            await _auth.ConfirmEmail(guid);
+            return Ok();
+        }
+
+
+
         private IActionResult GenerateTokens(User user)
         {
             var refreshToken = _JWT.GenerateRefreshToken();

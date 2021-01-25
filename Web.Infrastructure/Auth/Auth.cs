@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
@@ -64,6 +65,28 @@ namespace Web.Infrastructure.Auth
         public  async Task<User> GetUser(string email)
         {
             return await _context.Users.FirstOrDefaultAsync(x=>x.Email==email);
+        }
+        public async Task ConfirmEmail(string guid)
+        {
+            User user =await _context.Users.FirstOrDefaultAsync(x=>x.guidEmailConfirm==guid);
+            if(user==null)
+            {
+                return;
+            }
+            user.EmailIsVerified=true;
+            user.guidEmailConfirm="";
+            _context.Users.Update(user);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task<string> CreateGuidForConfirmEmail(int id)
+        {
+            User user = await GetUser(id);
+            string guid= Guid.NewGuid().ToString();
+            user.guidEmailConfirm= guid;
+            _context.Users.Update(user);
+            await _context.SaveChangesAsync();
+            return guid;
         }
     }
 }

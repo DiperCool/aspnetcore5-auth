@@ -13,5 +13,7 @@ namespace Web.Infrastructure.Auth
         Task<User> CreateUser(User user); 
         Task SetRefreshToken(int id,string token);
         Task<string> GetRefreshToken(int id);
+        Task ConfirmEmail(string guid);
+        Task<string> CreateGuidForConfirmEmail(int id);
     }
 }
