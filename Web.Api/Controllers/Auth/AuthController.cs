@@ -51,7 +51,7 @@ namespace Web.Api.Auth.Controllers
             string guid= await _auth.CreateGuidForConfirmEmail(user.Id);
             await _emailSender.SendConfirmEmail(model.Email,string.Format("{0}/api/auth/confirmEmail?guid={1}", 
                                                             HttpContext.Request.GetFullUrl(),guid));
-            return GenerateTokens(user);
+            return await GenerateTokens(user);
         }
 
         [ModelValidation]
@@ -63,7 +63,7 @@ namespace Web.Api.Auth.Controllers
             {
                 return BadRequest("Email or password is incorrect");
             }
-            return GenerateTokens(user);
+            return await GenerateTokens(user);
             
         }
         [ModelValidation]
@@ -80,7 +80,7 @@ namespace Web.Api.Auth.Controllers
             var newRefreshToken = _JWT.GenerateRefreshToken();
             await _auth.SaveRefreshToken(userId, newRefreshToken);
 
-            return GenerateTokens(user);
+            return await GenerateTokens(user);
         }
 
         [HttpPost]
@@ -92,9 +92,9 @@ namespace Web.Api.Auth.Controllers
             {
                 User u= new User{Email=payload.Email, FirstName=payload.GivenName, LastName= payload.FamilyName, EmailIsVerified=true};
                 u= await _auth.CreateUser(u);
-                return GenerateTokens(u);
+                return await GenerateTokens(u);
             }
-            return GenerateTokens(user);
+            return await GenerateTokens(user);
         }
 
         [Authorize]
@@ -111,10 +111,10 @@ namespace Web.Api.Auth.Controllers
 
 
 
-        private IActionResult GenerateTokens(User user)
+        private async Task<IActionResult> GenerateTokens(User user)
         {
             var refreshToken = _JWT.GenerateRefreshToken();
-            _auth.SetRefreshToken(user.Id, refreshToken);
+            await _auth.SetRefreshToken(user.Id, refreshToken);
             IEnumerable<Claim> claims = new List<Claim>()
             {
                 new Claim(ClaimsIdentity.DefaultNameClaimType, user.Email),
